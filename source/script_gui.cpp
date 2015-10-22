@@ -8100,7 +8100,7 @@ LRESULT CALLBACK GuiWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPara
 			{
 				GuiControlType *aControl = &pgui->mControl[i];
 
-				if (aControl->type = GUI_CONTROL_STATUSBAR)
+				if (aControl->type == GUI_CONTROL_STATUSBAR)
 					continue;
 				// Reset moved controls
 				if (aControl->mAYReset)
@@ -8193,7 +8193,7 @@ LRESULT CALLBACK GuiWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPara
 				{
 					RECT rect;
 					GuiControlType *aControl = &pgui->mControl[i];
-					if (aControl->type = GUI_CONTROL_STATUSBAR)
+					if (aControl->type == GUI_CONTROL_STATUSBAR)
 						continue;
 					GetWindowRect(aControl->hwnd, &rect);
 					POINT pt = { rect.left, rect.top };
