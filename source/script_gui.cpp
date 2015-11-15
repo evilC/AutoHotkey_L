@@ -1184,6 +1184,10 @@ ResultType Line::GuiControl(LPTSTR aCommand, LPTSTR aControlID, LPTSTR aParam3, 
 			MapWindowPoints(NULL, gui.mHwnd, (LPPOINT)&rect, 2); // Convert rect to client coordinates (not the same as GetClientRect()).
 			InvalidateRect(gui.mHwnd, &rect, TRUE); // Seems safer to use TRUE, not knowing all possible overlaps, etc.
 		}
+		control.mX = xpos;
+		control.mY = ypos;
+		control.mHeight = height;
+		control.mWidth = width;
 		goto return_the_result;
 	}
 
@@ -3102,13 +3106,13 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 	case GUI_CONTROL_TEXT:
 		// Seems best to omit SS_NOPREFIX by default so that ampersand can be used to create shortcut keys.
 		control.hwnd = CreateWindowEx(exstyle, _T("static"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
 		break;
 
 	case GUI_CONTROL_LINK:
 		// Seems best to omit LWS_NOPREFIX by default so that ampersand can be used to create shortcut keys.
 		control.hwnd = CreateWindowEx(exstyle, _T("SysLink"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
 		break;
 
 	case GUI_CONTROL_PIC:
@@ -3119,7 +3123,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// Must set its caption to aText so that documented ability to refer to a picture by its original
 		// filename is possible:
 		if (control.hwnd = CreateWindowEx(exstyle, _T("static"), aText, style
-			, opt.x, opt.y, opt.width, opt.height  // OK if zero, control creation should still succeed.
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height  // OK if zero, control creation should still succeed.
 			, mHwnd, control_id, g_hInstance, NULL))
 		{
 			// In light of the below, it seems best to delete the bitmaps whenever the control changes
@@ -3225,7 +3229,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// should be rarely present anyway.  Also, BS_NOTIFY seems to have no effect on GroupBoxes (it
 		// never sends any BN_CLICKED/BN_DBLCLK messages).  This has been verified twice.
 		control.hwnd = CreateWindowEx(exstyle, _T("button"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
 		break;
 
 	case GUI_CONTROL_BUTTON:
@@ -3234,7 +3238,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// In addition, this causes automatic wrapping to occur if the user specified a width
 		// too small to fit the entire line.
 		if (control.hwnd = CreateWindowEx(exstyle, _T("button"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (style & BS_DEFPUSHBUTTON)
 			{
@@ -3283,7 +3287,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// to send BN_DBLCLK messages, any rapid clicks by the user on (for example) a tri-state checkbox
 		// are seen only as one click for the purpose of changing the box's state.
 		if (control.hwnd = CreateWindowEx(exstyle, _T("button"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (opt.checked != BST_UNCHECKED) // Set the specified state.
 				SendMessage(control.hwnd, BM_SETCHECK, opt.checked, 0);
@@ -3292,7 +3296,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 
 	case GUI_CONTROL_RADIO:
 		control.hwnd = CreateWindowEx(exstyle, _T("button"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
 		// opt.checked is handled later below.
 		break;
 
@@ -3309,7 +3313,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// isn't that useful anymore anyway since GuiControl(Get) can access controls directly by
 		// their current output-var names:
 		if (control.hwnd = CreateWindowEx(exstyle, _T("Combobox"), _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			// Set font unconditionally to simplify calculations, which help ensure that at least one item
 			// in the DropDownList/Combo is visible when the list drops down:
@@ -3344,7 +3348,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 	case GUI_CONTROL_LISTBOX:
 		// See GUI_CONTROL_COMBOBOX above for why empty string is passed in as the caption:
 		if (control.hwnd = CreateWindowEx(exstyle, _T("Listbox"), _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (opt.tabstop_count)
 				SendMessage(control.hwnd, LB_SETTABSTOPS, opt.tabstop_count, (LPARAM)opt.tabstop);
@@ -3386,7 +3390,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 	case GUI_CONTROL_LISTVIEW:
 		if (opt.listview_view != LV_VIEW_TILE) // It was ensured earlier that listview_view can be set to LV_VIEW_TILE only for XP or later.
 			style = (style & ~LVS_TYPEMASK) | opt.listview_view; // Create control in the correct view mode whenever possible (TILE is the exception because it can't be expressed via style).
-		if (control.hwnd = CreateWindowEx(exstyle, WC_LISTVIEW, _T(""), style, opt.x, opt.y // exstyle does apply to ListViews.
+		if (control.hwnd = CreateWindowEx(exstyle, WC_LISTVIEW, _T(""), style, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0) // exstyle does apply to ListViews.
 			, opt.width, opt.height == COORD_UNSPECIFIED ? 200 : opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (   !(control.union_lv_attrib = (lv_attrib_type *)malloc(sizeof(lv_attrib_type)))   )
@@ -3502,7 +3506,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		break;
 
 	case GUI_CONTROL_TREEVIEW:
-		if (control.hwnd = CreateWindowEx(exstyle, WC_TREEVIEW, _T(""), style, opt.x, opt.y
+		if (control.hwnd = CreateWindowEx(exstyle, WC_TREEVIEW, _T(""), style, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0)
 			, opt.width, opt.height == COORD_UNSPECIFIED ? 200 : opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			mCurrentTreeView = &control;
@@ -3562,7 +3566,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// when done (or NULL if it failed to allocate the memory).
 		malloc_buf = (*aText && (style & ES_MULTILINE)) ? TranslateLFtoCRLF(aText) : aText;
 		if (control.hwnd = CreateWindowEx(exstyle, _T("edit"), malloc_buf ? malloc_buf : aText, style  // malloc_buf is checked again in case mem alloc failed.
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			// As documented in MSDN, setting a password char will have no effect for multi-line edits
 			// since they do not support password/mask char.
@@ -3608,7 +3612,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 			style |= DTS_SHOWNONE;
 		//else it's blank, so retain the default DTS_SHORTDATEFORMAT (0x0000).
 		if (control.hwnd = CreateWindowEx(exstyle, DATETIMEPICK_CLASS, _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (use_custom_format)
 				DateTime_SetFormat(control.hwnd, aText);
@@ -3638,7 +3642,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		}
 		// Create the control with arbitrary width/height if no width/height were explicitly specified.
 		// It will be resized after creation by querying the control:
-		if (control.hwnd = CreateWindowEx(exstyle, MONTHCAL_CLASS, _T(""), style, opt.x, opt.y
+		if (control.hwnd = CreateWindowEx(exstyle, MONTHCAL_CLASS, _T(""), style, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0)
 			, opt.width < 0 ? 100 : opt.width  // Negative width has special meaning upon creation (see below).
 			, opt.height == COORD_UNSPECIFIED ? 100 : opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
@@ -3732,7 +3736,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// In this case, not only doesn't the caption appear anywhere, it's not set either (or at least
 		// not retrievable via GetWindowText()):
 		if (control.hwnd = CreateWindowEx(exstyle, HOTKEY_CLASS, _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (*aText)
 				SendMessage(control.hwnd, HKM_SETHOTKEY, TextToHotkey(aText), 0);
@@ -3784,7 +3788,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// retrieved and used to figure out how to resize the buddy in cases where its width-set-automatically
 		// -based-on-contents should not be squished as a result of buddying.
 		if (control.hwnd = CreateWindowEx(exstyle, UPDOWN_CLASS, _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			if (provide_buddy_manually) // v1.0.42.02 (see comment where provide_buddy_manually is initialized).
 				SendMessage(control.hwnd, UDM_SETBUDDY, (WPARAM)prev_control.hwnd, 0); // See StatusBar notes above.  Also, mControlCount>0 whenever provide_buddy_manually==true.
@@ -3868,7 +3872,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 
 	case GUI_CONTROL_SLIDER:
 		if (control.hwnd = CreateWindowEx(exstyle, TRACKBAR_CLASS, _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			ControlSetSliderOptions(control, opt); // Fix for v1.0.25.08: This must be done prior to the below.
 			// The control automatically deals with out-of-range values by setting slider to min or max.
@@ -3883,7 +3887,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 
 	case GUI_CONTROL_PROGRESS:
 		if (control.hwnd = CreateWindowEx(exstyle, PROGRESS_CLASS, _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			// Progress bars don't default to mBackgroundColorCtl for their background color because it
 			// would be undesired by the user 99% of the time (it usually would look bad since the bar's
@@ -3902,7 +3906,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 
 	case GUI_CONTROL_TAB:
 		if (control.hwnd = CreateWindowEx(exstyle, WC_TABCONTROL, _T(""), style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			// For v1.0.23, theme is removed unconditionally for Tab controls because if an XP theme is
 			// in effect, causing a non-solid background (such as an off-white gradient/fade), there are
@@ -3954,7 +3958,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 			// If any of the above calls failed, attempt to create the window anyway:
 		}
 		if (control.hwnd = CreateWindowEx(exstyle, _T("AtlAxWin"), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL))
 		{
 			IObject *activex_obj;
 			// This is done even if no output_var, to ensure the control was successfully created:
@@ -3976,7 +3980,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		if (opt.customClassAtom == 0)
 			return g_script.ScriptError(_T("A window class is required."));
 		control.hwnd = CreateWindowEx(exstyle, MAKEINTATOM(opt.customClassAtom), aText, style
-			, opt.x, opt.y, opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
+			, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, mHwnd, control_id, g_hInstance, NULL);
 		break;
 
 	case GUI_CONTROL_STATUSBAR:
@@ -3991,7 +3995,7 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		if (aGui)
 		{
 			control.hwnd = aGui->mHwnd;
-			MoveWindow(control.hwnd, opt.x, opt.y, opt.width, opt.height, true);
+			MoveWindow(control.hwnd, opt.x - (mHScroll && mHScroll->nPos ? mHScroll->nPos : 0), opt.y - (mVScroll && mVScroll->nPos ? mVScroll->nPos : 0), opt.width, opt.height, true);
 		}
 		break;
 	} // switch() for control creation.
@@ -4182,12 +4186,12 @@ ResultType GuiType::AddControl(GuiControls aControlType, LPTSTR aOptions, LPTSTR
 		// Scroll has been already initialized and needs to be updated
 		if (mStyle & WS_HSCROLL && mHScroll)
 		{
-			mHScroll->nMax = mMaxExtentRight;
+			mHScroll->nMax = mMaxExtentRight + mMarginX;
 			SetScrollInfo(mHwnd, SB_HORZ, mHScroll, true);
 		}
 		if (mStyle & WS_VSCROLL && mVScroll)
 		{
-			mVScroll->nMax = mMaxExtentDown;
+			mVScroll->nMax = mMaxExtentDown + mMarginY;
 			SetScrollInfo(mHwnd, SB_VERT, mVScroll, true);
 		}
 
